@@ -1,4 +1,4 @@
-package com.example.foursquaremvvm.data.entity
+package com.example.foursquaremvvm.data.database.entity
 
 import androidx.room.*
 

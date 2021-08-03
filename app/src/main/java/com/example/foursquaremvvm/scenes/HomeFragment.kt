@@ -1,29 +1,49 @@
 package com.example.foursquaremvvm.scenes
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.foursquaremvvm.R
-import com.example.foursquaremvvm.data.entity.LocationEntity
-import com.example.foursquaremvvm.data.entity.VenueEntity
+import com.example.foursquaremvvm.data.remote.model.VenueModel
 import com.example.foursquaremvvm.databinding.FragmentHomeBinding
+import com.google.android.gms.location.*
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import dagger.hilt.android.AndroidEntryPoint
+
 
 @AndroidEntryPoint
 class HomeFragment : Fragment(), OnMapReadyCallback {
 
     private val viewModel by viewModels<HomeViewModel>()
-    private lateinit var binding: FragmentHomeBinding
 
-    private lateinit var googleMap: GoogleMap
     private var mapFragment: SupportMapFragment? = null
+    private lateinit var binding: FragmentHomeBinding
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var googleMap: GoogleMap
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            getLastKnownLocation()
+        } else {
+            requestLocationIfNeeded()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -41,19 +61,74 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         binding = FragmentHomeBinding.bind(view)
         binding.viewModel = viewModel
         binding.lifecycleOwner = this
+
+        observeVenuesList()
     }
 
+    private fun requestLocationIfNeeded() {
+        when (PackageManager.PERMISSION_GRANTED) {
+            ContextCompat.checkSelfPermission(
+                requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION
+            ) -> {
+                getLastKnownLocation()
+            }
+            else -> {
+                requestPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+            }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun getLastKnownLocation() {
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location: Location? ->
+                moveCameraToTheCurrentLocation(location)
+                location?.let {
+                    viewModel.fetchVenuesWithLatLng(location.latitude, location.longitude)
+                }
+            }
+    }
+
+    @SuppressLint("PotentialBehaviorOverride")
     override fun onMapReady(onReadyMap: GoogleMap) {
         googleMap = onReadyMap
         googleMap.setInfoWindowAdapter(MarkerInfoWindowAdapter(requireContext()))
-        val venueEntity =
-            VenueEntity(name = "example", location = LocationEntity(address = "example"))
+        googleMap.setOnMapClickListener { location ->
+            viewModel.fetchVenuesWithLatLng(location.latitude, location.longitude)
+        }
+        requestLocationIfNeeded()
+    }
+
+    private fun observeVenuesList() {
+        viewModel.venuesListLiveData.observe(viewLifecycleOwner) {
+            googleMap.clear()
+            it.forEach { venueModel ->
+                addMarkerToMap(venueModel)
+            }
+        }
+    }
+
+    private fun addMarkerToMap(venueModel: VenueModel?) {
         val marker = googleMap.addMarker(
             MarkerOptions()
-                .title(venueEntity.name)
-                .position(venueEntity.location?.latLng)
+                .title(venueModel?.name)
+                .position(venueModel?.location?.latLng)
         )
-        marker?.tag = venueEntity
+        marker?.tag = venueModel
+    }
+
+    private fun moveCameraToTheCurrentLocation(location: Location?) {
+        val zoomLevel = 16.0f
+
+        googleMap.moveCamera(
+            CameraUpdateFactory.newLatLngZoom(
+                LatLng(
+                    location?.latitude ?: 0.0,
+                    location?.longitude ?: 0.0
+                ), zoomLevel
+            )
+        )
     }
 
 }

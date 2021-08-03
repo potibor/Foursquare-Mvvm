@@ -2,7 +2,8 @@ package com.example.foursquaremvvm.di
 
 import android.content.Context
 import androidx.room.Room
-import com.example.foursquaremvvm.data.FourSquareDatabase
+import com.example.foursquaremvvm.data.database.FourSquareDatabase
+import com.example.foursquaremvvm.data.database.dao.FoursquareDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,5 +21,10 @@ object DatabaseModule {
             FourSquareDatabase::class.java,
             "foursquare.db"
         ).fallbackToDestructiveMigration().build()
+
+    @Provides
+    fun provideLogDao(database: FourSquareDatabase): FoursquareDao {
+        return database.foursquareDao()
+    }
 
 }

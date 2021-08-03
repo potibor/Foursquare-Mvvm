@@ -2,6 +2,7 @@ package com.example.foursquaremvvm.di
 
 import android.app.Application
 import android.content.Context
+import com.example.foursquaremvvm.data.remote.api.VenueService
 import com.example.foursquaremvvm.util.Constants
 import com.google.gson.GsonBuilder
 import dagger.Module
@@ -72,5 +73,11 @@ class NetworkModule {
     @Singleton
     fun provideContext(application: Application): Context {
         return application.applicationContext
+    }
+
+    @Provides
+    @Singleton
+    fun provideApi(retrofit: Retrofit): VenueService {
+        return retrofit.create(VenueService::class.java)
     }
 }
