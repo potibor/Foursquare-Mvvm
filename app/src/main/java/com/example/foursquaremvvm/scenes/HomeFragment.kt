@@ -110,12 +110,14 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun addMarkerToMap(venueModel: VenueModel?) {
-        val marker = googleMap.addMarker(
-            MarkerOptions()
-                .title(venueModel?.name)
-                .position(venueModel?.location?.latLng)
-        )
-        marker?.tag = venueModel
+        venueModel?.location?.let {
+            val marker = googleMap.addMarker(
+                MarkerOptions()
+                    .title(venueModel.name)
+                    .position(venueModel.location.latLng)
+            )
+            marker?.tag = venueModel
+        }
     }
 
     private fun moveCameraToTheCurrentLocation(location: Location?) {

@@ -8,20 +8,20 @@ import com.example.foursquaremvvm.data.database.entity.VenueEntity
 interface FoursquareDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun addLocation(locationEntity: LocationEntity)
+    suspend fun addLocation(locationEntity: LocationEntity)
 
     @Query("SELECT * FROM venue")
     suspend fun getVenues(): List<VenueEntity>
 
     @Query("SELECT * FROM location")
-    fun getLocation(): LocationEntity?
+    suspend fun getLocation(): LocationEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun addVenues(venues: List<VenueEntity?>)
+    suspend fun addVenues(venues: List<VenueEntity?>)
 
     @Query("DELETE FROM venue")
-    fun removeAllVenues()
+    suspend fun removeAllVenues()
 
     @Query("DELETE FROM location")
-    fun removeLocations()
+    suspend fun removeLocations()
 }

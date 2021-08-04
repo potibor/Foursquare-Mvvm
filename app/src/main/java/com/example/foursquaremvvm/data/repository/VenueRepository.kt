@@ -1,13 +1,10 @@
 package com.example.foursquaremvvm.data.repository
 
-import android.location.Location
-import com.example.foursquaremvvm.data.database.entity.LocationEntity
-import com.example.foursquaremvvm.data.database.entity.VenueEntity
 import com.example.foursquaremvvm.data.local.VenueLocalDataSource
 import com.example.foursquaremvvm.data.remote.datasource.VenueRemoteDataSource
 import com.example.foursquaremvvm.data.remote.model.LocationModel
 import com.example.foursquaremvvm.data.remote.model.VenueModel
-import com.google.android.gms.maps.model.LatLng
+import org.jetbrains.annotations.TestOnly
 import javax.inject.Inject
 import kotlin.math.acos
 import kotlin.math.cos
@@ -17,13 +14,14 @@ class VenueRepository @Inject constructor(
     private val remoteDataSource: VenueRemoteDataSource,
     private val localDataSource: VenueLocalDataSource
 ) {
+
     suspend fun fetchVenues(lat: Double, lng: Double): List<VenueModel?> {
         val localLastLocation = getLatLngFromLocal()
         val distanceBetweenLocations = calculateDistance(
             lat,
             lng,
-            localLastLocation.latitude,
-            localLastLocation.longitude
+            localLastLocation?.lat ?: 0.0,
+            localLastLocation?.lng ?: 0.0
         )
         removeAllLocations()
         addNewLatLngToLocal(lat, lng)
@@ -34,52 +32,44 @@ class VenueRepository @Inject constructor(
             addVenuesToLocal(venuesFromService)
             venuesFromService
         } else {
-            removeAllVenues()
             fetchLocalVenues()
         }
     }
 
-    private fun addVenuesToLocal(venuesFromService: List<VenueModel?>) {
-        val newVenueEntityList: ArrayList<VenueEntity?> = arrayListOf()
-        venuesFromService.forEach {
-            newVenueEntityList.add(
-                VenueEntity(
-                    id = it.hashCode(),
-                    name = it?.name,
-                    location = LocationEntity(
-                        id = it?.location.hashCode(),
-                        address = "",
-                        lat = it?.location?.lat!!,
-                        lng = it.location.lng
-                    )
-                )
-            )
-        }
-        localDataSource.addVenueList(newVenueEntityList)
+    @TestOnly
+    suspend fun addVenuesToLocal(venuesFromService: List<VenueModel?>) {
+        localDataSource.addVenueList(venuesFromService)
     }
 
-    private suspend fun fetchLocalVenues(): List<VenueModel> {
-        return localDataSource.getAll()
+    @TestOnly
+    suspend fun fetchLocalVenues(): List<VenueModel> {
+        val localVenues = localDataSource.getAll()
+        removeAllVenues()
+        return localVenues
     }
 
-    private fun removeAllVenues() {
+    @TestOnly
+    suspend fun removeAllVenues() {
         localDataSource.removeAllVenuesFirst()
     }
 
-    private fun removeAllLocations() {
+    @TestOnly
+    suspend fun removeAllLocations() {
         localDataSource.removeLocationsFromLocal()
     }
 
-    private fun addNewLatLngToLocal(lat: Double, lng: Double) {
+    @TestOnly
+    suspend fun addNewLatLngToLocal(lat: Double, lng: Double) {
         localDataSource.add(LocationModel(lat = lat, lng = lng))
     }
 
-    private fun getLatLngFromLocal(): LatLng {
-        val locationModel = localDataSource.getLocation() ?: return LatLng(0.0, 0.0)
-        return LatLng(locationModel.lat, locationModel.lng)
+    @TestOnly
+    suspend fun getLatLngFromLocal(): LocationModel? {
+        return localDataSource.getLocation()
     }
 
-    private fun calculateDistance(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
+    @TestOnly
+    fun calculateDistance(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
         val lngDiff = lng1 - lng2
         var distance = sin(deg2rad(lat1)) *
                 sin(deg2rad(lat2)) +

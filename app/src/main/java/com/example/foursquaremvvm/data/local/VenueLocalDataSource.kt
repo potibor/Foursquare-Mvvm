@@ -11,11 +11,11 @@ class VenueLocalDataSource @Inject constructor(
     private val venuesDao: FoursquareDao
 ) {
 
-    fun add(locationModel: LocationModel) {
+    suspend fun add(locationModel: LocationModel) {
         with(locationModel) {
             venuesDao.addLocation(
                 LocationEntity(
-                    id = 1,
+                    id = id,
                     lat = lat,
                     lng = lng
                 )
@@ -33,21 +33,36 @@ class VenueLocalDataSource @Inject constructor(
             ).toVenueModel()
         }
 
-    fun getLocation(): LocationModel?  {
+    suspend fun getLocation(): LocationModel?  {
         val locationEntity = venuesDao.getLocation()
         return locationEntity?.toLocationModel()
     }
 
 
-    fun addVenueList(venuesFromService: List<VenueEntity?>) {
-        venuesDao.addVenues(venuesFromService)
+    suspend fun addVenueList(venuesFromService: List<VenueModel?>) {
+        val newVenueEntityList: MutableList<VenueEntity?> = mutableListOf()
+        venuesFromService.forEach {
+            newVenueEntityList.add(
+                VenueEntity(
+                    id = it.hashCode(),
+                    name = it?.name,
+                    location = LocationEntity(
+                        id = it?.location.hashCode(),
+                        address = "",
+                        lat = it?.location?.lat!!,
+                        lng = it.location.lng
+                    )
+                )
+            )
+        }
+        venuesDao.addVenues(newVenueEntityList)
     }
 
-    fun removeAllVenuesFirst() {
+    suspend fun removeAllVenuesFirst() {
         venuesDao.removeAllVenues()
     }
 
-    fun removeLocationsFromLocal() {
+    suspend fun removeLocationsFromLocal() {
         venuesDao.removeLocations()
     }
 }
