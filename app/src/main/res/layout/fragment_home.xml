@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".scenes.HomeFragment">
+    tools:context=".scenes.home.HomeFragment">
 
     <data>
 
         <variable
             name="viewModel"
-            type="com.example.foursquaremvvm.scenes.HomeViewModel" />
+            type="com.example.foursquaremvvm.scenes.home.HomeViewModel" />
 
     </data>
 

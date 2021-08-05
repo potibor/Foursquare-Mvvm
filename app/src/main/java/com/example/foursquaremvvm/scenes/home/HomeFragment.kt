@@ -1,4 +1,4 @@
-package com.example.foursquaremvvm.scenes
+package com.example.foursquaremvvm.scenes.home
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -12,6 +12,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import com.example.foursquaremvvm.NavGraphDirections
 import com.example.foursquaremvvm.R
 import com.example.foursquaremvvm.data.remote.model.VenueModel
 import com.example.foursquaremvvm.databinding.FragmentHomeBinding
@@ -21,12 +23,13 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import dagger.hilt.android.AndroidEntryPoint
 
 
 @AndroidEntryPoint
-class HomeFragment : Fragment(), OnMapReadyCallback {
+class HomeFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
     private val viewModel by viewModels<HomeViewModel>()
 
@@ -83,8 +86,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location: Location? ->
-                moveCameraToTheCurrentLocation(location)
                 location?.let {
+                    moveCameraToTheCurrentLocation(location)
                     viewModel.fetchVenuesWithLatLng(location.latitude, location.longitude)
                 }
             }
@@ -97,6 +100,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         googleMap.setOnMapClickListener { location ->
             viewModel.fetchVenuesWithLatLng(location.latitude, location.longitude)
         }
+        googleMap.setOnMarkerClickListener(this)
         requestLocationIfNeeded()
     }
 
@@ -131,6 +135,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 ), zoomLevel
             )
         )
+    }
+
+    override fun onMarkerClick(marker: Marker): Boolean  {
+        val venue = marker.tag as? VenueModel ?: return false
+        findNavController().navigate(NavGraphDirections.actionHomeFragmentToDetailFragment(venue))
+        return false
     }
 
 }

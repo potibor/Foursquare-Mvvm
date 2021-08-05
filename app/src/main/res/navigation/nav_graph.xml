@@ -7,7 +7,34 @@
 
     <fragment
         android:id="@+id/homeFragment"
-        android:name="com.example.foursquaremvvm.scenes.HomeFragment"
+        android:name="com.example.foursquaremvvm.scenes.home.HomeFragment"
         android:label="fragment_home"
         tools:layout="@layout/fragment_home" />
+    <fragment
+        android:id="@+id/detailFragment"
+        android:name="com.example.foursquaremvvm.scenes.detail.DetailFragment"
+        android:label="fragment_detail"
+        tools:layout="@layout/fragment_detail" >
+
+        <argument
+            android:name="venueModel"
+            app:argType="com.example.foursquaremvvm.data.remote.model.VenueModel"
+            app:nullable="false" />
+
+    </fragment>
+
+    <action
+        android:id="@+id/action_homeFragment_to_detailFragment"
+        app:destination="@id/detailFragment"
+        app:enterAnim="@anim/enter"
+        app:exitAnim="@anim/exit"
+        app:popEnterAnim="@anim/pop_enter"
+        app:popExitAnim="@anim/pop_exit">
+
+        <argument
+            android:name="venueModel"
+            app:argType="com.example.foursquaremvvm.data.remote.model.VenueModel"
+            app:nullable="false" />
+    </action>
+
 </navigation>

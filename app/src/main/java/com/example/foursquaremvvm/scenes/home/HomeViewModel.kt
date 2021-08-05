@@ -1,4 +1,4 @@
-package com.example.foursquaremvvm.scenes
+package com.example.foursquaremvvm.scenes.home
 
 import android.util.Log
 import androidx.lifecycle.LiveData
